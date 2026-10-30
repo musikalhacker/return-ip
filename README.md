@@ -16,7 +16,7 @@ Infrastructure is defined in Terraform and the app is deployed to an Azure App S
 - Always On is not available.
 - **Custom domains are not supported** on Free or Shared tiers.  
   You must scale to at least Basic (B1) to bind a custom domain or use an App Service managed certificate.
-- The public URL is `https://<app-name>.azurewebsites.net`.
+- The public URL is `https://<your-app-name>.azurewebsites.net`.
 
 ## Prerequisites
 
@@ -37,24 +37,24 @@ Infrastructure is defined in Terraform and the app is deployed to an Azure App S
    terraform init
    terraform apply
    ```
-   Note the App Service name (default: `return-ip-mhacker`).
+   Note the App Service name that gets created (you can change the default in `variables.tf`).
 
-3. Retrieve the publish profile:
+3. Retrieve the publish profile (replace `<your-app-name>` and `<your-resource-group>` with the actual values):
    ```bash
    az webapp deployment list-publishing-profiles \
-     --name return-ip-mhacker \
-     --resource-group rg-return-ip \
+     --name <your-app-name> \
+     --resource-group <your-resource-group> \
      --xml
    ```
 
 4. In the GitHub repository go to **Settings → Secrets and variables → Actions** and add:
-   - `AZURE_WEBAPP_NAME` = `return-ip-mhacker`
+   - `AZURE_WEBAPP_NAME` = `<your-app-name>`
    - `AZURE_WEBAPP_PUBLISH_PROFILE` = the full XML output from the previous command
 
 5. Push a commit to `main` (or manually re-run the workflow).  
    GitHub Actions will deploy the app.
 
-6. Visit `https://return-ip-mhacker.azurewebsites.net`.
+6. Visit `https://<your-app-name>.azurewebsites.net`.
 
 ## Tear down
 
