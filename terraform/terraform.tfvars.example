@@ -1,0 +1,3 @@
+app_name = "return-ip-yourname-12345"   # must be globally unique
+# location = "eastus"
+# resource_group_name = "rg-return-ip"
