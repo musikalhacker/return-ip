@@ -1,37 +1,39 @@
-const express = require('express');
-const app = express();
-const port = process.env.PORT || 8080;
+const http = require('http');
 
-app.get('/', (req, res) => {
-  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim()
-           || req.socket.remoteAddress
-           || 'unknown';
+const server = http.createServer((req, res) => {
+  // Prefer the leftmost address from X-Forwarded-For (what Azure sets)
+  const forwarded = req.headers['x-forwarded-for'];
+  let ip = forwarded
+    ? forwarded.split(',')[0].trim()
+    : req.socket.remoteAddress;
 
-  const ua = (req.headers['user-agent'] || '').toLowerCase();
-  const accept = (req.headers['accept'] || '').toLowerCase();
+  // Strip port if present (IPv4:port or [IPv6]:port)
+  if (ip.includes('.')) {
+    ip = ip.split(':')[0];                 // IPv4
+  } else if (ip.startsWith('[')) {
+    ip = ip.slice(1, ip.indexOf(']'));     // IPv6 with brackets
+  }
+  // Plain IPv6 has no port in remoteAddress on most Node versions
 
-  const wantsText = ua.includes('curl') || ua.includes('wget') ||
-                    accept.includes('text/plain') || !accept.includes('text/html');
-
-  if (wantsText) {
-    res.type('text/plain').send(ip + '\n');
-  } else {
-    res.send(`<!DOCTYPE html>
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+  res.end(`<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <title>Your IP</title>
   <style>
-    body { font-family: system-ui, sans-serif; text-align: center; margin-top: 20vh; }
-    h1 { font-size: 3rem; margin-bottom: 0.5rem; }
+    body { font-family: system-ui, sans-serif; display: flex; flex-direction: column;
+           align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+    .ip { font-size: 3rem; font-weight: 700; }
+    .label { margin-top: 0.5rem; color: #555; }
   </style>
 </head>
 <body>
-  <h1>${ip}</h1>
-  <p>Your public IP address</p>
+  <div class="ip">${ip || 'unknown'}</div>
+  <div class="label">Your public IP address</div>
 </body>
 </html>`);
-  }
 });
 
-app.listen(port, () => console.log(`Listening on ${port}`));
+const port = process.env.PORT || 8080;
+server.listen(port, () => console.log(`listening on ${port}`));
